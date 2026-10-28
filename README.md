@@ -2,7 +2,7 @@
 
 An end-to-end business intelligence project on **100k real marketplace orders**: an ETL pipeline that loads raw files into a **star-schema warehouse** with automated **data quality checks**, **SQL analyses**, **statistical tests**, a measured **query-performance** comparison, and an interactive **dashboard**.
 
-**Live dashboard:** [View on Tableau Public](https://public.tableau.com/app/profile/kenneth.pangestu/viz/OlistDeliveryReviews/Dashboard1) · an HTML version is in [`dashboard/index.html`](dashboard/index.html)
+**Live dashboard:** [View on Tableau Public](https://public.tableau.com/app/profile/kenneth.pangestu/viz/OlistDeliveryReviews/DeliveryandReviews) · an HTML version is in [`dashboard/index.html`](dashboard/index.html)
 
 **The business question:** a marketplace (Olist, Brazil, where independent sellers ship through shared logistics) wants fewer 1–2 star reviews. What drives them, and where in the delivery chain should it act?
 
@@ -126,7 +126,7 @@ pytest                              # run the tests
 jupyter lab analysis/analysis.ipynb
 ```
 
-Open `dashboard/index.html` in any browser; it needs no server. The same dashboard, rebuilt in Tableau from the CSVs in `exports/`, is on [Tableau Public](https://public.tableau.com/app/profile/kenneth.pangestu/viz/OlistDeliveryReviews/Dashboard1).
+Open `dashboard/index.html` in any browser; it needs no server. The same dashboard, rebuilt in Tableau from the CSVs in `exports/`, is on [Tableau Public](https://public.tableau.com/app/profile/kenneth.pangestu/viz/OlistDeliveryReviews/DeliveryandReviews).
 
 ## Limitations
 
