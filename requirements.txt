@@ -1,0 +1,9 @@
+# The pipeline itself (python -m pipeline.run) uses only the standard library.
+# These are for the analysis notebook, dashboard checks and tests.
+numpy>=1.24
+pandas>=2.1
+scipy>=1.10
+matplotlib>=3.7
+jinja2>=3.1
+jupyterlab>=4.0
+pytest>=7.0

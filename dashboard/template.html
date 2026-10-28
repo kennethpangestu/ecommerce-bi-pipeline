@@ -1,0 +1,372 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Delivery & Reviews Dashboard</title>
+<style>
+  :root {
+    --bg: #f6f6f4; --surface: #fcfcfb; --border: #e4e3df; --grid: #ecebe7;
+    --ink: #0b0b0b; --ink-2: #52514e; --ink-3: #807f7a;
+    --blue: #2a78d6; --orange: #eb6834; --muted: #c3c2bd; --good: #0ca30c;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #121211; --surface: #1a1a19; --border: #2e2e2c; --grid: #262624;
+      --ink: #f0efec; --ink-2: #c3c2b7; --ink-3: #8f8e86;
+      --blue: #3987e5; --orange: #d95926; --muted: #55544f;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #121211; --surface: #1a1a19; --border: #2e2e2c; --grid: #262624;
+    --ink: #f0efec; --ink-2: #c3c2b7; --ink-3: #8f8e86;
+    --blue: #3987e5; --orange: #d95926; --muted: #55544f;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 14px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 24px 16px 40px; }
+  header { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: flex-end; justify-content: space-between; margin-bottom: 18px; }
+  h1 { font-size: 22px; margin: 0 0 4px; letter-spacing: -0.01em; }
+  .sub { color: var(--ink-2); margin: 0; }
+  .filter label { display: block; font-size: 12px; color: var(--ink-2); margin-bottom: 4px; }
+  select { font: inherit; padding: 6px 10px; border-radius: 8px; border: 1px solid var(--border);
+           background: var(--surface); color: var(--ink); min-width: 220px; }
+  .kpis { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; margin-bottom: 16px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; }
+  .kpi .label { font-size: 12px; color: var(--ink-2); }
+  .kpi .value { font-size: 24px; font-weight: 650; margin-top: 2px; font-variant-numeric: tabular-nums; }
+  .kpi .note { font-size: 12px; color: var(--ink-3); margin-top: 2px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  h2 { font-size: 15px; margin: 0 0 2px; }
+  .card .desc { font-size: 12px; color: var(--ink-2); margin: 0 0 8px; }
+  svg { display: block; width: 100%; height: auto; overflow: visible; }
+  svg text { fill: var(--ink-2); font-size: 11px; font-family: inherit; }
+  svg .val { fill: var(--ink); font-size: 11px; }
+  .axis line, .gridline { stroke: var(--grid); }
+  .hit { fill: transparent; cursor: default; }
+  #tip { position: fixed; pointer-events: none; background: var(--surface); color: var(--ink);
+         border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; font-size: 12px;
+         box-shadow: 0 4px 14px rgba(0,0,0,.12); opacity: 0; transition: opacity .08s; z-index: 10; max-width: 260px; }
+  #tip b { display: block; margin-bottom: 2px; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  th, td { text-align: right; padding: 7px 8px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  th:first-child, td:first-child, th:nth-child(2), td:nth-child(2) { text-align: left; }
+  th { font-size: 12px; color: var(--ink-2); font-weight: 600; cursor: pointer; user-select: none; }
+  th[aria-sort="descending"]::after { content: " ▼"; font-size: 9px; }
+  th[aria-sort="ascending"]::after { content: " ▲"; font-size: 9px; }
+  td.id { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; color: var(--ink-2); }
+  .flag { color: var(--orange); font-weight: 600; }
+  .tablewrap { overflow-x: auto; }
+  footer { color: var(--ink-3); font-size: 12px; margin-top: 18px; }
+  .legend { display: flex; gap: 14px; font-size: 12px; color: var(--ink-2); margin: 0 0 6px; }
+  .sw { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+  @media (max-width: 900px) { .kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); } .grid2 { grid-template-columns: 1fr; } }
+  @media (max-width: 520px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } select { min-width: 0; width: 100%; } .filter { width: 100%; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Delivery &amp; Reviews Dashboard</h1>
+      <p class="sub">Olist marketplace (Brazil), Jan 2017 – Aug 2018 · built from the warehouse marts</p>
+    </div>
+    <div class="filter">
+      <label for="state">Customer state</label>
+      <select id="state"></select>
+    </div>
+  </header>
+
+  <section class="kpis" id="kpis"></section>
+
+  <section class="grid2">
+    <div class="card">
+      <h2>GMV by month</h2>
+      <p class="desc">Item value of orders not canceled or unavailable (R$)</p>
+      <div id="gmvChart"></div>
+    </div>
+    <div class="card">
+      <h2>On-time delivery by month</h2>
+      <p class="desc">Delivered on or before the date promised at purchase</p>
+      <div id="otChart"></div>
+    </div>
+  </section>
+
+  <section class="grid2">
+    <div class="card">
+      <h2>1–2 star reviews by delivery timing</h2>
+      <p class="desc">All states · bad reviews jump once the promised date is missed</p>
+      <div class="legend"><span><span class="sw" style="background:var(--blue)"></span>On time or early</span><span><span class="sw" style="background:var(--orange)"></span>Late</span></div>
+      <div id="delayChart"></div>
+    </div>
+    <div class="card">
+      <h2>Top categories by GMV</h2>
+      <p class="desc">All states · average review shown at the end of each bar</p>
+      <div id="catChart"></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Top 25 sellers by GMV</h2>
+    <p class="desc">All states · late and handoff rates use single-seller orders. <span class="flag">Orange</span> = worse than the marketplace average. Click a column to sort.</p>
+    <div class="tablewrap"><table id="sellers"></table></div>
+  </section>
+
+  <footer id="footer"></footer>
+</div>
+<div id="tip" role="tooltip"></div>
+
+<script>
+const DATA = /*__DATA__*/null;
+
+const $ = (s) => document.querySelector(s);
+const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const fmtInt = (n) => Math.round(n).toLocaleString("en-US");
+const fmtPct = (p, d = 1) => (p * 100).toFixed(d) + "%";
+const fmtMoney = (n) => n >= 1e6 ? "R$ " + (n / 1e6).toFixed(2) + "M" : n >= 1e3 ? "R$ " + (n / 1e3).toFixed(0) + "k" : "R$ " + n.toFixed(0);
+const NS = "http://www.w3.org/2000/svg";
+const el = (tag, attrs = {}, parent) => {
+  const e = document.createElementNS(NS, tag);
+  for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+  if (parent) parent.appendChild(e);
+  return e;
+};
+
+// ---- tooltip ---------------------------------------------------------------
+const tip = $("#tip");
+function showTip(evt, html) {
+  tip.innerHTML = html; tip.style.opacity = 1;
+  const pad = 14, w = tip.offsetWidth, h = tip.offsetHeight;
+  let x = evt.clientX + pad, y = evt.clientY + pad;
+  if (x + w > innerWidth - 8) x = evt.clientX - w - pad;
+  if (y + h > innerHeight - 8) y = evt.clientY - h - pad;
+  tip.style.left = x + "px"; tip.style.top = y + "px";
+}
+const hideTip = () => (tip.style.opacity = 0);
+
+// ---- aggregation over the state x month mart ----------------------------------
+function aggregate(state) {
+  const rows = DATA.stateMonth.filter((r) => state === "ALL" || r.s === state);
+  const byMonth = new Map();
+  const tot = { o: 0, g: 0, d: 0, l: 0, r: 0, rs: 0, lr: 0 };
+  for (const r of rows) {
+    if (!byMonth.has(r.m)) byMonth.set(r.m, { m: r.m, o: 0, g: 0, d: 0, l: 0 });
+    const b = byMonth.get(r.m);
+    b.o += r.o; b.g += r.g; b.d += r.d; b.l += r.l;
+    for (const k in tot) tot[k] += r[k];
+  }
+  const months = [...byMonth.values()].sort((a, b) => a.m.localeCompare(b.m));
+  return { months, tot };
+}
+
+// ---- KPI tiles ------------------------------------------------------------------
+function renderKpis(state) {
+  const { tot } = aggregate(state);
+  const all = aggregate("ALL").tot;
+  const onTime = 1 - tot.l / tot.d, onTimeAll = 1 - all.l / all.d;
+  const tiles = [
+    ["GMV", fmtMoney(tot.g), state === "ALL" ? "20 complete months" : fmtPct(tot.g / all.g) + " of total"],
+    ["Orders", fmtInt(tot.o), "not canceled or unavailable"],
+    ["Average order value", "R$ " + (tot.g / tot.o).toFixed(0), "items only, before freight"],
+    ["On-time delivery", fmtPct(onTime), state === "ALL" ? fmtInt(tot.d) + " delivered" : diffNote(onTime - onTimeAll, "pts vs all")],
+    ["Average review", (tot.rs / tot.r).toFixed(2) + " / 5", fmtInt(tot.r) + " reviews"],
+    ["1–2 star reviews", fmtPct(tot.lr / tot.r), state === "ALL" ? "share of reviews" : diffNote(tot.lr / tot.r - all.lr / all.r, "pts vs all", true)],
+  ];
+  $("#kpis").innerHTML = tiles.map(([l, v, n]) =>
+    `<div class="card kpi"><div class="label">${l}</div><div class="value">${v}</div><div class="note">${n}</div></div>`).join("");
+}
+function diffNote(d, suffix, higherIsWorse = false) {
+  const pts = (d * 100).toFixed(1);
+  const worse = higherIsWorse ? d > 0.0005 : d < -0.0005;
+  const txt = (d >= 0 ? "+" : "") + pts + " " + suffix;
+  return worse ? `<span class="flag">${txt}</span>` : txt;
+}
+
+// ---- charts -----------------------------------------------------------------------
+function niceMax(v) {
+  const p = Math.pow(10, Math.floor(Math.log10(v))), n = v / p;
+  return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 2.5 ? 2.5 : n <= 5 ? 5 : 10) * p;
+}
+
+function barChart(container, items, { value, label, color, fmtAxis, tipHtml, labelEvery = 1, showValues = false, yMax }) {
+  container.innerHTML = "";
+  const W = 560, H = 240, m = { t: 14, r: 8, b: 46, l: 48 };
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img" }, container);
+  const iw = W - m.l - m.r, ih = H - m.t - m.b;
+  const max = yMax || niceMax(Math.max(...items.map(value)) * 1.05);
+  const ticks = 4;
+  for (let i = 0; i <= ticks; i++) {
+    const v = (max / ticks) * i, y = m.t + ih - (v / max) * ih;
+    el("line", { x1: m.l, x2: W - m.r, y1: y, y2: y, class: "gridline" }, svg);
+    el("text", { x: m.l - 6, y: y + 4, "text-anchor": "end" }, svg).textContent = fmtAxis(v);
+  }
+  const step = iw / items.length, bw = Math.max(2, step * 0.72);
+  items.forEach((d, i) => {
+    const v = value(d), h = (v / max) * ih, x = m.l + i * step + (step - bw) / 2, y = m.t + ih - h;
+    const r = Math.min(4, bw / 2, h);
+    el("path", { d: `M${x},${m.t + ih} V${y + r} Q${x},${y} ${x + r},${y} H${x + bw - r} Q${x + bw},${y} ${x + bw},${y + r} V${m.t + ih} Z`,
+                 fill: color(d) }, svg);
+    if (showValues) el("text", { x: x + bw / 2, y: y - 5, "text-anchor": "middle", class: "val" }, svg).textContent = showValues(d);
+    if (i % labelEvery === 0) {
+      const lines = label(d).split("\n");
+      lines.forEach((ln, j) => el("text", { x: x + bw / 2, y: m.t + ih + 16 + j * 12, "text-anchor": "middle" }, svg).textContent = ln);
+    }
+    const hit = el("rect", { x: m.l + i * step, y: m.t, width: step, height: ih, class: "hit" }, svg);
+    hit.addEventListener("mousemove", (e) => showTip(e, tipHtml(d)));
+    hit.addEventListener("mouseleave", hideTip);
+  });
+}
+
+function lineChart(container, items, { value, label, fmtAxis, tipHtml, yMin, yMax, labelEvery = 1, refValue, refLabel }) {
+  container.innerHTML = "";
+  const W = 560, H = 240, m = { t: 14, r: 12, b: 46, l: 48 };
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img" }, container);
+  const iw = W - m.l - m.r, ih = H - m.t - m.b;
+  const ys = (v) => m.t + ih - ((v - yMin) / (yMax - yMin)) * ih;
+  const step = iw / items.length, xs = (i) => m.l + step * i + step / 2;
+  const tickStep = (yMax - yMin) <= 40 ? 5 : 10;
+  for (let v = yMin; v <= yMax + 1e-9; v += tickStep) {
+    const y = ys(v);
+    el("line", { x1: m.l, x2: W - m.r, y1: y, y2: y, class: "gridline" }, svg);
+    el("text", { x: m.l - 6, y: y + 4, "text-anchor": "end" }, svg).textContent = fmtAxis(v);
+  }
+  if (refValue != null) {
+    el("line", { x1: m.l, x2: W - m.r, y1: ys(refValue), y2: ys(refValue), stroke: css("--ink-3"), "stroke-dasharray": "4 4" }, svg);
+    el("text", { x: m.l + 4, y: ys(refValue) + 14, "text-anchor": "start" }, svg).textContent = refLabel;
+  }
+  const pts = items.map((d, i) => [xs(i), ys(Math.max(yMin, value(d)))]);
+  el("path", { d: "M" + pts.map((p) => p.join(",")).join(" L"), fill: "none", stroke: css("--orange"), "stroke-width": 2, "stroke-linejoin": "round" }, svg);
+  const dot = el("circle", { r: 5, fill: css("--orange"), stroke: css("--surface"), "stroke-width": 2, opacity: 0 }, svg);
+  const cross = el("line", { y1: m.t, y2: m.t + ih, stroke: css("--ink-3"), "stroke-width": 1, opacity: 0 }, svg);
+  items.forEach((d, i) => {
+    if (i % labelEvery === 0) el("text", { x: xs(i), y: m.t + ih + 16, "text-anchor": "middle" }, svg).textContent = label(d);
+    const hit = el("rect", { x: m.l + step * i, y: m.t, width: step, height: ih, class: "hit" }, svg);
+    hit.addEventListener("mousemove", (e) => {
+      dot.setAttribute("cx", pts[i][0]); dot.setAttribute("cy", pts[i][1]); dot.setAttribute("opacity", 1);
+      cross.setAttribute("x1", pts[i][0]); cross.setAttribute("x2", pts[i][0]); cross.setAttribute("opacity", 1);
+      showTip(e, tipHtml(d));
+    });
+    hit.addEventListener("mouseleave", () => { hideTip(); dot.setAttribute("opacity", 0); cross.setAttribute("opacity", 0); });
+  });
+}
+
+function hbarChart(container, items, { value, label, color, endLabel, tipHtml, max }) {
+  container.innerHTML = "";
+  const rowH = 22, W = 560, m = { t: 4, r: 64, b: 4, l: 168 };
+  const H = m.t + m.b + rowH * items.length;
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img" }, container);
+  const iw = W - m.l - m.r;
+  items.forEach((d, i) => {
+    const y = m.t + i * rowH, w = (value(d) / max) * iw, bh = rowH * 0.66;
+    el("text", { x: m.l - 8, y: y + rowH / 2 + 4, "text-anchor": "end" }, svg).textContent = label(d);
+    const r = Math.min(4, w);
+    el("path", { d: `M${m.l},${y + (rowH - bh) / 2} H${m.l + w - r} Q${m.l + w},${y + (rowH - bh) / 2} ${m.l + w},${y + (rowH - bh) / 2 + r} V${y + (rowH + bh) / 2 - r} Q${m.l + w},${y + (rowH + bh) / 2} ${m.l + w - r},${y + (rowH + bh) / 2} H${m.l} Z`, fill: color(d) }, svg);
+    el("text", { x: m.l + w + 6, y: y + rowH / 2 + 4, class: "val" }, svg).textContent = endLabel(d);
+    const hit = el("rect", { x: 0, y, width: W, height: rowH, class: "hit" }, svg);
+    hit.addEventListener("mousemove", (e) => showTip(e, tipHtml(d)));
+    hit.addEventListener("mouseleave", hideTip);
+  });
+}
+
+const monthLabel = (m) => ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][+m.slice(5) - 1] + " " + m.slice(2, 4);
+
+function renderMonthly(state) {
+  const { months } = aggregate(state);
+  const all = aggregate("ALL").tot;
+  barChart($("#gmvChart"), months, {
+    value: (d) => d.g, label: (d) => monthLabel(d.m), color: () => css("--blue"), labelEvery: 3,
+    fmtAxis: (v) => v >= 1e6 ? (v / 1e6).toFixed(1) + "M" : (v / 1e3).toFixed(0) + "k",
+    tipHtml: (d) => `<b>${monthLabel(d.m)}</b>GMV ${fmtMoney(d.g)}<br>${fmtInt(d.o)} orders · AOV R$ ${(d.g / d.o).toFixed(0)}`,
+  });
+  const rates = months.map((d) => ({ ...d, rate: d.d ? 1 - d.l / d.d : null })).filter((d) => d.rate !== null);
+  const lo = Math.min(...rates.map((d) => d.rate));
+  lineChart($("#otChart"), rates, {
+    value: (d) => d.rate * 100, label: (d) => monthLabel(d.m), labelEvery: 3,
+    yMin: Math.min(75, Math.floor(lo * 20) * 5), yMax: 100, fmtAxis: (v) => v.toFixed(0) + "%",
+    refValue: (1 - all.l / all.d) * 100, refLabel: "all states " + fmtPct(1 - all.l / all.d),
+    tipHtml: (d) => `<b>${monthLabel(d.m)}</b>${fmtPct(d.rate)} on time<br>${fmtInt(d.l)} late of ${fmtInt(d.d)} delivered`,
+  });
+}
+
+function renderStatic() {
+  const lateIdx = DATA.delay.findIndex((d) => d.b.includes("late"));
+  barChart($("#delayChart"), DATA.delay, {
+    value: (d) => d.rate, color: (d) => (DATA.delay.indexOf(d) >= lateIdx ? css("--orange") : css("--blue")),
+    label: (d) => d.b.replace("On the promised day", "On promised\nday").replace(" days ", " days\n"),
+    fmtAxis: (v) => (v * 100).toFixed(0) + "%", yMax: 1, showValues: (d) => fmtPct(d.rate, 0),
+    tipHtml: (d) => `<b>${d.b}</b>${fmtPct(d.rate)} gave 1–2 stars<br>average ${d.avg.toFixed(2)} stars · ${fmtInt(d.n)} orders`,
+  });
+  const cats = DATA.categories;
+  const avgReview = DATA.stateMonth.reduce((a, r) => a + r.rs, 0) / DATA.stateMonth.reduce((a, r) => a + r.r, 0);
+  hbarChart($("#catChart"), cats, {
+    value: (d) => d.gmv, max: Math.max(...cats.map((d) => d.gmv)) * 1.02, label: (d) => d.c.replaceAll("_", " "),
+    color: () => css("--blue"), endLabel: (d) => "★ " + d.review.toFixed(2),
+    tipHtml: (d) => `<b>${d.c.replaceAll("_", " ")}</b>GMV ${fmtMoney(d.gmv)}<br>${fmtPct(d.late)} late · ${d.review.toFixed(2)} avg review` +
+                    (d.review < avgReview ? ' <span class="flag">(below average)</span>' : ""),
+  });
+}
+
+// ---- seller table -------------------------------------------------------------------
+let sortKey = "gmv", sortDir = -1;
+function renderSellers() {
+  const totals = DATA.sellers;
+  const all = aggregate("ALL").tot;
+  const avgLate = all.l / all.d, avgReview = all.rs / all.r;
+  const cols = [
+    ["rank", "#", (d, i) => i + 1], ["id", "Seller", (d) => d.id.slice(0, 10) + "…"], ["state", "State", (d) => d.state],
+    ["orders", "Orders", (d) => fmtInt(d.orders)], ["gmv", "GMV", (d) => fmtMoney(d.gmv)],
+    ["late", "Late rate", (d) => d.late == null ? "–" : `<span class="${d.late > avgLate ? "flag" : ""}">${fmtPct(d.late)}</span>`],
+    ["handoff", "Late handoff", (d) => d.handoff == null ? "–" : fmtPct(d.handoff)],
+    ["review", "Avg review", (d) => d.review == null ? "–" : `<span class="${d.review < avgReview ? "flag" : ""}">${d.review.toFixed(2)}</span>`],
+  ];
+  const ranked = [...totals].sort((a, b) => b.gmv - a.gmv).map((d, i) => ({ ...d, rank: i + 1 }));
+  const sorted = [...ranked].sort((a, b) => {
+    const va = a[sortKey], vb = b[sortKey];
+    if (typeof va === "string") return sortDir * va.localeCompare(vb);
+    return sortDir * ((va ?? -Infinity) - (vb ?? -Infinity));
+  });
+  const head = "<thead><tr>" + cols.map(([k, l]) =>
+    `<th data-k="${k}" ${k === sortKey ? `aria-sort="${sortDir < 0 ? "descending" : "ascending"}"` : ""}>${l}</th>`).join("") + "</tr></thead>";
+  const body = "<tbody>" + sorted.map((d) => "<tr>" + cols.map(([k, , f]) =>
+    `<td class="${k === "id" ? "id" : ""}" ${k === "id" ? `title="${d.id}"` : ""}>${k === "rank" ? d.rank : f(d)}</td>`).join("") + "</tr>").join("") + "</tbody>";
+  $("#sellers").innerHTML = head + body;
+  $("#sellers").querySelectorAll("th").forEach((th) => th.addEventListener("click", () => {
+    const k = th.dataset.k;
+    if (k === sortKey) sortDir *= -1; else { sortKey = k; sortDir = k === "id" || k === "state" || k === "rank" ? 1 : -1; }
+    renderSellers();
+  }));
+}
+
+// ---- state filter -------------------------------------------------------------------
+function initFilter() {
+  const totals = {};
+  for (const r of DATA.stateMonth) totals[r.s] = (totals[r.s] || 0) + r.o;
+  const states = Object.keys(totals).sort((a, b) => totals[b] - totals[a]);
+  const sel = $("#state");
+  sel.innerHTML = `<option value="ALL">All states</option>` +
+    states.map((s) => `<option value="${s}">${s} · ${fmtInt(totals[s])} orders</option>`).join("");
+  let saved = "ALL";
+  try { saved = localStorage.getItem("bi-dash-state") || "ALL"; } catch (e) {}
+  if (!states.includes(saved)) saved = "ALL";
+  sel.value = saved;
+  sel.addEventListener("change", () => {
+    try { localStorage.setItem("bi-dash-state", sel.value); } catch (e) {}
+    renderKpis(sel.value); renderMonthly(sel.value);
+  });
+  return saved;
+}
+
+function renderAll() {
+  const state = $("#state").value;
+  renderKpis(state); renderMonthly(state); renderStatic(); renderSellers();
+}
+
+const initial = initFilter();
+renderAll();
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", renderAll);
+$("#footer").innerHTML = `Data: Olist Brazilian E-Commerce Public Dataset (CC BY-NC-SA 4.0). ` +
+  `Warehouse run ${DATA.run.run_id}, all blocking data quality checks ${DATA.run.all_passed ? "passed" : "<span class='flag'>did not pass</span>"}.`;
+</script>
+</body>
+</html>
