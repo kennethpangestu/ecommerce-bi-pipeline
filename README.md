@@ -101,7 +101,7 @@ ecommerce-bi-pipeline/
 │   ├── template.html
 │   └── build_dashboard.py
 ├── exports/                   # mart CSVs, ready for Tableau / Power BI
-├── docs/                      # data model, metric definitions, Tableau/Power BI guide
+├── docs/                      # data model and metric definitions
 ├── reports/figures/
 └── tests/                     # 13 tests: cleaning rules, measures, idempotency, quality gates
 ```
@@ -125,8 +125,6 @@ jupyter lab analysis/analysis.ipynb
 ```
 
 Open `dashboard/index.html` in any browser; it needs no server. To publish it, enable GitHub Pages for this repo.
-
-To rebuild the dashboard in Tableau or Power BI, see [docs/dashboard_guide.md](docs/dashboard_guide.md).
 
 ## Limitations
 
